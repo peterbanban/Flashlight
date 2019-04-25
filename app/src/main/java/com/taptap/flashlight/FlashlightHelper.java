@@ -1,6 +1,9 @@
 package com.taptap.flashlight;
 
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.hardware.Camera;
+import android.widget.Toast;
 
 /**
  * Created by hqx on 2019/4/25 16:17.
@@ -20,17 +23,6 @@ public class FlashlightHelper {
     }
     return mCamera;
   }
-//
-//  public static FlashlightHelper getInstance() {
-//    if (mInstance == null) {
-//      synchronized (FlashlightHelper.class) {
-//        if (mInstance == null) {
-//          mInstance = new FlashlightHelper();
-//        }
-//      }
-//    }
-//    return mInstance;
-//  }
 
   public static void openFalshlight() {
     try {
@@ -39,6 +31,7 @@ public class FlashlightHelper {
       mParameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
       getCamera().setParameters(mParameters);
     } catch (Exception ex) {
+      ex.printStackTrace();
     }
   }
 
@@ -48,8 +41,16 @@ public class FlashlightHelper {
       mParameters = getCamera().getParameters();
       mParameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
       getCamera().setParameters(mParameters);
-      getCamera().release();
     } catch (Exception ex) {
+      ex.printStackTrace();
     }
+  }
+
+  public static boolean supportFlashlight (Context c) {
+    if (!c.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
+      Toast.makeText(c, "很抱歉，设备不支持闪光灯", Toast.LENGTH_LONG);
+      return false;
+    }
+    return true;
   }
 }

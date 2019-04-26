@@ -36,7 +36,7 @@ public class FlashlightView extends FrameLayout {
   private float  mTouchDownY;
   private float mTouchUpY;
   private int mMoveHeight;
-  private boolean mMoveFlag = false;
+
   public FlashlightView(Context context) {
     super(context);
     initView();
@@ -76,7 +76,6 @@ public class FlashlightView extends FrameLayout {
     }
     if (mMoveAnimator.isRunning()) {
       lightFlag = !lightFlag;
-      mMoveFlag = !mMoveFlag;
       return;
     }
     mMoveAnimator.setDuration(300);
@@ -104,7 +103,6 @@ public class FlashlightView extends FrameLayout {
     }
     if (mAlphaAnimator.isRunning()) {
       lightFlag = !lightFlag;
-      mMoveFlag = !mMoveFlag;
       return;
     }
     mAlphaAnimator.setDuration(300);
@@ -196,7 +194,6 @@ public class FlashlightView extends FrameLayout {
           btnMoveAnimation(true);
           backgroundAlphaAnimation(true);
           lightFlag = !lightFlag;
-          mMoveFlag = !mMoveFlag;
           return true;
         }
       } else if ( mTouchUpY - mTouchDownY < - 20) {
@@ -204,7 +201,6 @@ public class FlashlightView extends FrameLayout {
           btnMoveAnimation(false);
           backgroundAlphaAnimation(false);
           lightFlag = !lightFlag;
-          mMoveFlag = !mMoveFlag;
           return true;
         }
       }
@@ -216,42 +212,81 @@ public class FlashlightView extends FrameLayout {
   public boolean onInterceptTouchEvent(MotionEvent event) {
     switch (event.getAction()) {
       case MotionEvent.ACTION_DOWN :
-        mMoveFlag = true;
         mTouchDownY = event.getRawY() - ScreenUtil.getStatusBarHeight(getContext());
         mPreClickTime = System.currentTimeMillis();
         break;
       case MotionEvent.ACTION_MOVE:
-        if (mMoveFlag) {
-          return caculateFlashlightChange(event);
+        int top = mContainer.getTop() + dip2px(getContext(), 10);
+        int bottom = mContainer.getBottom() - dip2px(getContext(), 10);
+        if (event.getY() >= top && event.getY() <= bottom) {
+          mTouchBtn.setY(event.getY());
+          float a = (mTouchBtn.getTop() - dip2px(getContext(), 30) - top) / (bottom - top);
+          mPrimaryBg.setAlpha(a);
         }
+           break;
       case MotionEvent.ACTION_CANCEL:
       case MotionEvent.ACTION_UP:
-        mMoveFlag = false;
-        mTouchUpY = event.getRawY() - ScreenUtil.getStatusBarHeight(getContext());
-        if (mTouchDownY > mContainer.getTop() - dip2px(getContext(), 10)
-            && mTouchDownY < mContainer.getBottom() - dip2px(getContext(), 10)
-            && mTouchUpY > mContainer.getTop() - dip2px(getContext(), 10)
-            && mTouchUpY < mContainer.getBottom() - dip2px(getContext(), 10)) {
-          if (Math.abs(mTouchDownY - mTouchUpY) <= 20 && mPreClickTime - System.currentTimeMillis() < 300) {
-            if (!lightFlag) {
-              FlashlightHelper.openFalshlight();
-            } else {
-              FlashlightHelper.shutdownFalshlight();
-            }
-            mPreClickTime = System.currentTimeMillis();
-            btnMoveAnimation(!lightFlag);
-            backgroundAlphaAnimation(!lightFlag);
-            lightFlag = !lightFlag;
-          }
-        }
+        btnMoveAutoScrollAnimation();
+        bgAlphaAutoChangeAnimation();
         return true;
     }
     return super.onInterceptTouchEvent(event);
   }
 
-  @Override
-  public boolean onTouchEvent(MotionEvent event) {
+  public void bgAlphaAutoChangeAnimation() {
+    if (mAlphaAnimator == null) {
+      mAlphaAnimator = new ValueAnimator();
+    }
+    if (mAlphaAnimator.isRunning()) {
+      mAlphaAnimator.cancel();
+      mAlphaAnimator.setDuration(300 - mAlphaAnimator.getCurrentPlayTime());
+    } else {
+      mAlphaAnimator.setDuration(300);
+    }
 
-    return super.onTouchEvent(event);
+    mAlphaAnimator.setInterpolator(FAST_OUT_SLOW_IN_INTERPOLATOR);
+    int top = mContainer.getTop() + dip2px(getContext(), 10);
+    int bottom = mContainer.getBottom() - dip2px(getContext(), 10);
+    float a = (mTouchBtn.getTop() - dip2px(getContext(), 30) - top) / (bottom - top);
+    if (mTouchBtn.getTop() -  dip2px(getContext(), 30) < (top + bottom) / 2) {
+      mAlphaAnimator.setFloatValues(a, 0f);
+    } else {
+      mAlphaAnimator.setFloatValues(a, 1f);
+    }
+    mAlphaAnimator.addUpdateListener(new AnimatorUpdateListener() {
+      @Override
+      public void onAnimationUpdate(ValueAnimator animation) {
+        mPrimaryBg.setAlpha((float)animation.getAnimatedValue());
+      }
+    });
+    mAlphaAnimator.start();
+  }
+
+  public void btnMoveAutoScrollAnimation() {
+    if (mMoveAnimator == null) {
+      mMoveAnimator = new ValueAnimator();
+    }
+    if (mMoveAnimator.isRunning()) {
+      mMoveAnimator.cancel();
+      mMoveAnimator.setDuration(300 - mAlphaAnimator.getCurrentPlayTime());
+    } else {
+      mMoveAnimator.setDuration(300);
+    }
+    mMoveAnimator.setInterpolator(FAST_OUT_SLOW_IN_INTERPOLATOR);
+    int top = mContainer.getTop() + dip2px(getContext(), 10);
+    int bottom = mContainer.getBottom() - dip2px(getContext(), 10);
+    if (mTouchBtn.getTop() - dip2px(getContext(), 30) < (top + bottom) / 2) {
+      mMoveAnimator.setFloatValues(mTouchBtn.getTop() - dip2px(getContext(), 30), mContainer.getTop() + dip2px(getContext(), 10));
+    } else {
+      mMoveAnimator.setFloatValues(mTouchBtn.getBottom() - dip2px(getContext(), 30), mContainer.getBottom() - dip2px(getContext(), 10));
+    }
+
+    mMoveAnimator.addUpdateListener(new AnimatorUpdateListener() {
+      @Override
+      public void onAnimationUpdate(ValueAnimator animation) {
+        mTouchBtn.setY((float)animation.getAnimatedValue());
+      }
+    });
+    mMoveAnimator.start();
   }
 }

@@ -21,7 +21,6 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(new String[]{permission.CAMERA},CAMERA_REQUEST_CODE);
             }
         }
-        ScreenUtil.setStatusHeight(this);
     }
 
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,

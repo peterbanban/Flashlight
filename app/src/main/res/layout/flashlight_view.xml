@@ -3,6 +3,7 @@
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
+  android:splitMotionEvents="false"
   android:background="@drawable/black_bg">
 
   <FrameLayout
@@ -46,11 +47,4 @@
 
   </RelativeLayout>
 
-  <!--<ImageView-->
-    <!--android:id="@+id/oval"-->
-    <!--android:layout_width="220dp"-->
-    <!--android:layout_height="220dp"-->
-    <!--android:layout_marginTop="160dp"-->
-    <!--android:layout_gravity="center_horizontal"-->
-    <!--android:src="@drawable/touch_btn"/>-->
 </FrameLayout>

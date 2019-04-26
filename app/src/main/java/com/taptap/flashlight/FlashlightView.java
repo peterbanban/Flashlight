@@ -41,6 +41,7 @@ public class FlashlightView extends FrameLayout implements OnTouchListener {
   private float  mTouchDownY;
   private float mTouchUpY;
   private int mMoveHeight;
+  private boolean mMoveFlag = false;
 
   public FlashlightView(Context context) {
     super(context);
@@ -93,7 +94,6 @@ public class FlashlightView extends FrameLayout implements OnTouchListener {
     if (light == lightFlag) {
       return;
     }
-
     if (mMoveAnimator == null) {
       mMoveAnimator = new ValueAnimator();
     }
@@ -171,31 +171,50 @@ public class FlashlightView extends FrameLayout implements OnTouchListener {
   public boolean onTouch(View v, MotionEvent event) {
     switch (event.getAction()) {
       case MotionEvent.ACTION_DOWN :
-        mTouchDownY = event.getRawY() - ScreenUtil.statusHeight;
+        mMoveFlag = true;
+        mTouchDownY = event.getRawY() - ScreenUtil.getStatusBarHeight(getContext());
         break;
       case MotionEvent.ACTION_MOVE:
-        return caculateFlashlightChange(event);
+        if (mMoveFlag) {
+          return caculateFlashlightChange(event);
+        }
       case MotionEvent.ACTION_CANCEL:
       case MotionEvent.ACTION_UP:
-        if (mTouchDownY > mContainer.getTop() && mTouchDownY < mContainer.getBottom()) {
-          mTouchUpY = event.getRawY() - ScreenUtil.statusHeight;
+        mMoveFlag = false;
+        mTouchUpY = event.getRawY() - ScreenUtil.getStatusBarHeight(getContext());
+        if (mTouchDownY > mContainer.getTop() - dip2px(getContext(), 10)
+            && mTouchDownY < mContainer.getBottom() - dip2px(getContext(), 10)
+            && mTouchUpY > mContainer.getTop() - dip2px(getContext(), 10)
+            && mTouchUpY < mContainer.getBottom() - dip2px(getContext(), 10)) {
           if (Math.abs(mTouchDownY - mTouchUpY) <= 20) {
-            return false;
+            if (!lightFlag) {
+              FlashlightHelper.openFalshlight();
+            } else {
+              FlashlightHelper.shutdownFalshlight();
+            }
+            mPreClickTime = System.currentTimeMillis();
+            btnMoveAnimation(!lightFlag);
+            backgroundAlphaAnimation(!lightFlag);
+            lightFlag = !lightFlag;
           }
-          return true;
         }
+        return true;
     }
     return false;
   }
 
   public boolean caculateFlashlightChange(MotionEvent event) {
-    mTouchUpY = event.getRawY() -  ScreenUtil.statusHeight;
-    if (mTouchDownY > mContainer.getTop() && mTouchDownY < mContainer.getBottom()) {
+    mTouchUpY = event.getRawY() - ScreenUtil.getStatusBarHeight(getContext());
+    if (mTouchDownY > mContainer.getTop()- dip2px(getContext(), 10)
+        && mTouchDownY < mContainer.getBottom() + dip2px(getContext(), 10)
+        && mTouchUpY > mContainer.getTop()- dip2px(getContext(), 10)
+        && mTouchUpY < mContainer.getBottom() + dip2px(getContext(), 10)) {
       if (mTouchUpY - mTouchDownY > 20) {
         if (!lightFlag) {
           btnMoveAnimation(true);
           backgroundAlphaAnimation(true);
           lightFlag = !lightFlag;
+          mMoveFlag = !mMoveFlag;
           return true;
         }
       } else if ( mTouchUpY - mTouchDownY < - 20) {
@@ -203,6 +222,7 @@ public class FlashlightView extends FrameLayout implements OnTouchListener {
           btnMoveAnimation(false);
           backgroundAlphaAnimation(false);
           lightFlag = !lightFlag;
+          mMoveFlag = !mMoveFlag;
           return true;
         }
       }

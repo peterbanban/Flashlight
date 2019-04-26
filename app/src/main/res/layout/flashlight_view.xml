@@ -4,6 +4,7 @@
   android:layout_width="match_parent"
   android:layout_height="match_parent"
   android:splitMotionEvents="false"
+  android:clickable="true"
   android:background="@drawable/black_bg">
 
   <FrameLayout
@@ -17,6 +18,7 @@
     android:layout_marginTop="40dp"
     android:layout_marginLeft="30dp"
     android:src="@drawable/flashlight"
+    android:clickable="true"
     android:layout_width="126dp"
     android:layout_height="36dp"/>
 
@@ -33,6 +35,7 @@
       android:layout_height="wrap_content"
       android:layout_marginTop="60dp"
       android:layout_gravity="bottom"
+      android:clickable="true"
       android:layout_centerHorizontal="true"
       android:src="@drawable/off"/>
 
@@ -42,6 +45,7 @@
       android:layout_height="wrap_content"
       android:layout_alignParentBottom="true"
       android:layout_marginBottom="60dp"
+      android:clickable="true"
       android:layout_centerHorizontal="true"
       android:src="@drawable/on"/>
 

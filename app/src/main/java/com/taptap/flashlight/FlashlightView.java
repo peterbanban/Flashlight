@@ -9,7 +9,6 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.view.animation.Interpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -20,13 +19,9 @@ import butterknife.ButterKnife;
 /**
  * Created by hqx on 2019/4/25 17:13.
  */
-public class FlashlightView extends FrameLayout implements OnTouchListener {
+public class FlashlightView extends FrameLayout {
   @BindView(R.id.container)
   RelativeLayout mContainer;
-  @BindView(R.id.on)
-  ImageView mOn;
-  @BindView(R.id.off)
-  ImageView mOff;
   @BindView(R.id.primary_bg)
   FrameLayout mPrimaryBg;
   ImageView mTouchBtn;
@@ -42,7 +37,6 @@ public class FlashlightView extends FrameLayout implements OnTouchListener {
   private float mTouchUpY;
   private int mMoveHeight;
   private boolean mMoveFlag = false;
-
   public FlashlightView(Context context) {
     super(context);
     initView();
@@ -64,30 +58,13 @@ public class FlashlightView extends FrameLayout implements OnTouchListener {
     mRoot.setBackgroundResource(R.drawable.primary_bg);
     mTouchBtn  = new ImageView(getContext());
     mTouchBtn.setImageResource(R.drawable.touch_btn);
+    mTouchBtn.setClickable(true);
     FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(dip2px(getContext(), 220), dip2px(getContext(), 220));
     lp.setMargins(0,  dip2px(getContext(), 160), 0 , 0);
     lp.gravity = Gravity.CENTER_HORIZONTAL;
     mPrimaryBg.setAlpha(0);
     addView(mTouchBtn, lp);
-    mTouchBtn.setOnTouchListener(this);
-    mTouchBtn.setOnClickListener(new OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if (System.currentTimeMillis() - mPreClickTime < 500) {
-          return;
-        }
-        if (!lightFlag) {
-          FlashlightHelper.openFalshlight();
-        } else {
-          FlashlightHelper.shutdownFalshlight();
-        }
-        mPreClickTime = System.currentTimeMillis();
-        btnMoveAnimation(!lightFlag);
-        backgroundAlphaAnimation(!lightFlag);
-        lightFlag = !lightFlag;
-      }
-    });
-
+//    mTouchBtn.setOnTouchListener(this);
   }
 
   public void btnMoveAnimation(boolean light) {
@@ -98,6 +75,8 @@ public class FlashlightView extends FrameLayout implements OnTouchListener {
       mMoveAnimator = new ValueAnimator();
     }
     if (mMoveAnimator.isRunning()) {
+      lightFlag = !lightFlag;
+      mMoveFlag = !mMoveFlag;
       return;
     }
     mMoveAnimator.setDuration(300);
@@ -124,6 +103,8 @@ public class FlashlightView extends FrameLayout implements OnTouchListener {
       mAlphaAnimator = new ValueAnimator();
     }
     if (mAlphaAnimator.isRunning()) {
+      lightFlag = !lightFlag;
+      mMoveFlag = !mMoveFlag;
       return;
     }
     mAlphaAnimator.setDuration(300);
@@ -167,41 +148,42 @@ public class FlashlightView extends FrameLayout implements OnTouchListener {
 
   }
 
-  @Override
-  public boolean onTouch(View v, MotionEvent event) {
-    switch (event.getAction()) {
-      case MotionEvent.ACTION_DOWN :
-        mMoveFlag = true;
-        mTouchDownY = event.getRawY() - ScreenUtil.getStatusBarHeight(getContext());
-        break;
-      case MotionEvent.ACTION_MOVE:
-        if (mMoveFlag) {
-          return caculateFlashlightChange(event);
-        }
-      case MotionEvent.ACTION_CANCEL:
-      case MotionEvent.ACTION_UP:
-        mMoveFlag = false;
-        mTouchUpY = event.getRawY() - ScreenUtil.getStatusBarHeight(getContext());
-        if (mTouchDownY > mContainer.getTop() - dip2px(getContext(), 10)
-            && mTouchDownY < mContainer.getBottom() - dip2px(getContext(), 10)
-            && mTouchUpY > mContainer.getTop() - dip2px(getContext(), 10)
-            && mTouchUpY < mContainer.getBottom() - dip2px(getContext(), 10)) {
-          if (Math.abs(mTouchDownY - mTouchUpY) <= 20) {
-            if (!lightFlag) {
-              FlashlightHelper.openFalshlight();
-            } else {
-              FlashlightHelper.shutdownFalshlight();
-            }
-            mPreClickTime = System.currentTimeMillis();
-            btnMoveAnimation(!lightFlag);
-            backgroundAlphaAnimation(!lightFlag);
-            lightFlag = !lightFlag;
-          }
-        }
-        return true;
-    }
-    return false;
-  }
+//  @Override
+//  public boolean onTouch(View v, MotionEvent event) {
+//    switch (event.getAction()) {
+//      case MotionEvent.ACTION_DOWN :
+//        mMoveFlag = true;
+//        mTouchDownY = event.getRawY() - ScreenUtil.getStatusBarHeight(getContext());
+//        mPreClickTime = System.currentTimeMillis();
+//        break;
+//      case MotionEvent.ACTION_MOVE:
+//        if (mMoveFlag) {
+//          return caculateFlashlightChange(event);
+//        }
+//      case MotionEvent.ACTION_CANCEL:
+//      case MotionEvent.ACTION_UP:
+//        mMoveFlag = false;
+//        mTouchUpY = event.getRawY() - ScreenUtil.getStatusBarHeight(getContext());
+//        if (mTouchDownY > mContainer.getTop() - dip2px(getContext(), 10)
+//            && mTouchDownY < mContainer.getBottom() - dip2px(getContext(), 10)
+//            && mTouchUpY > mContainer.getTop() - dip2px(getContext(), 10)
+//            && mTouchUpY < mContainer.getBottom() - dip2px(getContext(), 10)) {
+//          if (Math.abs(mTouchDownY - mTouchUpY) <= 20 && mPreClickTime - System.currentTimeMillis() < 300) {
+//            if (!lightFlag) {
+//              FlashlightHelper.openFalshlight();
+//            } else {
+//              FlashlightHelper.shutdownFalshlight();
+//            }
+//            mPreClickTime = System.currentTimeMillis();
+//            btnMoveAnimation(!lightFlag);
+//            backgroundAlphaAnimation(!lightFlag);
+//            lightFlag = !lightFlag;
+//          }
+//        }
+//        return true;
+//    }
+//    return false;
+//  }
 
   public boolean caculateFlashlightChange(MotionEvent event) {
     mTouchUpY = event.getRawY() - ScreenUtil.getStatusBarHeight(getContext());
@@ -228,5 +210,48 @@ public class FlashlightView extends FrameLayout implements OnTouchListener {
       }
     }
     return false;
+  }
+
+  @Override
+  public boolean onInterceptTouchEvent(MotionEvent event) {
+    switch (event.getAction()) {
+      case MotionEvent.ACTION_DOWN :
+        mMoveFlag = true;
+        mTouchDownY = event.getRawY() - ScreenUtil.getStatusBarHeight(getContext());
+        mPreClickTime = System.currentTimeMillis();
+        break;
+      case MotionEvent.ACTION_MOVE:
+        if (mMoveFlag) {
+          return caculateFlashlightChange(event);
+        }
+      case MotionEvent.ACTION_CANCEL:
+      case MotionEvent.ACTION_UP:
+        mMoveFlag = false;
+        mTouchUpY = event.getRawY() - ScreenUtil.getStatusBarHeight(getContext());
+        if (mTouchDownY > mContainer.getTop() - dip2px(getContext(), 10)
+            && mTouchDownY < mContainer.getBottom() - dip2px(getContext(), 10)
+            && mTouchUpY > mContainer.getTop() - dip2px(getContext(), 10)
+            && mTouchUpY < mContainer.getBottom() - dip2px(getContext(), 10)) {
+          if (Math.abs(mTouchDownY - mTouchUpY) <= 20 && mPreClickTime - System.currentTimeMillis() < 300) {
+            if (!lightFlag) {
+              FlashlightHelper.openFalshlight();
+            } else {
+              FlashlightHelper.shutdownFalshlight();
+            }
+            mPreClickTime = System.currentTimeMillis();
+            btnMoveAnimation(!lightFlag);
+            backgroundAlphaAnimation(!lightFlag);
+            lightFlag = !lightFlag;
+          }
+        }
+        return true;
+    }
+    return super.onInterceptTouchEvent(event);
+  }
+
+  @Override
+  public boolean onTouchEvent(MotionEvent event) {
+
+    return super.onTouchEvent(event);
   }
 }
